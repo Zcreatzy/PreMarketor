@@ -11,7 +11,7 @@ PreMarketor 不只是把新闻堆进网页，而是把每日盘前信息组织�
 
 > 自动化与模型：本项目利用 **Codex Automation + GPT 5.6 Sol High** 生成、更新、校验并发布每日简报。自动化运行在仓库之外；本仓库保存可直接部署的静态产物。
 
-在线站点：[https://market-ahead-open.vercel.app/](https://market-ahead-open.vercel.app/)
+在线站点：[https://premarketor.com/](https://premarketor.com/)
 
 ## 项目定位
 
