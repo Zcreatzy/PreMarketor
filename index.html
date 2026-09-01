@@ -1265,14 +1265,14 @@ Updated: 2026-08-31 20:40 CST
     }).observe(document.documentElement, {childList:true, subtree:true});
   }
   function renderEntry(target, timeTarget, data, type){
-    var entry = (data.entries || []).find(function(item){return typeKey(item.type) === type || typeKey(item.label).indexOf(type) >= 0;});
+    var entry = (data.entries || []).find(function(item){return typeKey(item.type) === type || typeKey(item.market) === type || typeKey(item.label).indexOf(type) >= 0;});
     if(!entry){target.innerHTML = '<div class="panel empty">' + (currentLang === 'en' ? 'No brief is available for this date.' : '这个日期没有对应简报。') + '</div>';return '';}
     loaded[type] = entry.html || '<div class="panel empty">归档内容为空。</div>';
     loadedEn[type] = entry.html_en || '<div class="panel empty">English translation is unavailable for this archived brief.</div>';
     target.innerHTML = currentLang === 'en' ? loadedEn[type] : loaded[type];
     cleanNewsTitlePrefixes(target);
     revealModules(target);
-    loadedTimes[type] = entry.updated || data.updated || data.date || '';
+    loadedTimes[type] = entry.time || entry.updated || data.updated || data.date || '';
     timeTarget.textContent = loadedTimes[type];
     return timeTarget.textContent;
   }
