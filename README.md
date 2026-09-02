@@ -154,6 +154,19 @@ python3 -m http.server 8000
 - 首页：`http://localhost:8000/`
 - 指定日期：`http://localhost:8000/history/?date=YYYY-MM-DD`
 
+## AKShare 云端连通测试
+
+仓库提供一个仅依赖 AKShare 的 A股/港股指数抓取入口。它会依次尝试 AKShare
+中的东方财富和新浪接口，并将小型连通性快照写入 `data/akshare-latest.json`：
+
+```sh
+python3 -m pip install -r requirements.txt
+python3 scripts/fetch_akshare_snapshot.py
+```
+
+命令只有在 A股与港股两组数据都成功返回时才以状态码 0 结束，适合在 Codex
+Cloud 中验证云端网络；生成的 JSON 作为静态文件可由 Vercel 直接发布。
+
 ## 更新与发布契约
 
 一次完整的每日发布需要保持三个目标同步：
