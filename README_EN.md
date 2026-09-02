@@ -171,6 +171,11 @@ The daily brief generator uses the JSON as evidence for risk appetite, sector
 rotation, and same-day price/volume validation. A pre-open result is explicitly a
 previous-session close baseline; it is not a standalone page panel or a live quote.
 
+GitHub Actions refreshes this JSON in the cloud at 08:35 and 09:05
+(Asia/Shanghai) on weekdays. The 08:50/09:10 brief jobs prefer the fresh checked-in
+file and only try a local fetch when it is missing or stale, so market evidence does
+not depend on the host reaching Eastmoney or Sina directly.
+
 ## Update and Publication Contract
 
 A complete daily publication keeps three targets synchronized:
