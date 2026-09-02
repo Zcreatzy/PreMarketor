@@ -903,25 +903,6 @@ button[data-state="success"]{box-shadow:inset 0 -2px 0 var(--color-up)}
     transition-duration:150ms!important;
   }
 }
-.akshare-live{margin-block-end:var(--space-md,1rem);padding:var(--space-lg,1.25rem)}
-.akshare-live-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md,1rem)}
-.akshare-live h2{margin:0;font-size:clamp(1.15rem,2vw,1.5rem)}
-.akshare-kicker{display:block;margin-block-end:.2rem;color:var(--teal);font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.akshare-status{flex:none;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:.25rem .65rem;color:var(--muted);font-size:.75rem;font-weight:750}
-.akshare-status.is-ok{border-color:color-mix(in srgb,var(--bull) 35%,var(--line));color:var(--bull)}
-.akshare-status.is-error{border-color:color-mix(in srgb,var(--bear) 35%,var(--line));color:var(--bear)}
-.akshare-meta{margin:.45rem 0 var(--space-md,1rem);color:var(--muted);font-size:.8rem}
-.akshare-markets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-md,1rem)}
-.akshare-market{min-width:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:.8rem}
-.akshare-market-head{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;margin-block-end:.55rem}
-.akshare-market-head b{font-size:.95rem}.akshare-market-head span{color:var(--muted);font-size:.72rem;text-align:right;overflow-wrap:anywhere}
-.akshare-quotes{display:grid;gap:.35rem}
-.akshare-quote{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:.65rem;border-top:1px solid var(--line);padding-top:.35rem;font-size:.8rem}
-.akshare-quote:first-child{border-top:0;padding-top:0}
-.akshare-quote-name{min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.akshare-quote-name small{margin-inline-start:.35rem;color:var(--muted);font-weight:500}
-.akshare-price{font-variant-numeric:tabular-nums}.akshare-change{min-width:4.5rem;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
-.akshare-message{margin:0;color:var(--muted)}
-@media (max-width:47.99rem){.akshare-markets{grid-template-columns:1fr}.akshare-live-head{align-items:flex-start}.akshare-quote{gap:.45rem}.akshare-quote-name small{display:none}}
 </style>
 </head>
 <body>
@@ -949,11 +930,6 @@ Updated: 2026-09-02 21:11 CST
 </aside>
 <section class="history-stage">
   <div class="record-banner panel"><div class="record-heading"><strong id="record-title">每日盘前预测器</strong></div><div class="record-meta-stack"><span id="record-meta">正在读取归档...</span><small>powered by Codex Automation + GPT 5.6 Sol</small><small id="research-disclaimer" class="research-disclaimer">仅用于市场研究与信息整理，不构成任何投资建议</small></div><div class="banner-controls"><div class="color-toggle" aria-label="涨跌颜色"><button type="button" data-color-mode="green-up">绿涨红跌</button><button type="button" data-color-mode="red-up">红涨绿跌</button></div><div class="theme-toggle"><button type="button" id="theme-toggle" aria-label="切换至暗夜模式" aria-pressed="false">🌙 暗夜</button></div><div class="lang-toggle" aria-label="Language"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">EN</button></div></div></div>
-  <section class="akshare-live panel" id="akshare-live" aria-live="polite">
-    <div class="akshare-live-head"><div><span class="akshare-kicker" id="akshare-kicker">Cloud snapshot</span><h2 id="akshare-title">AKShare 最新行情</h2></div><span class="akshare-status" id="akshare-status">连接中…</span></div>
-    <p class="akshare-meta" id="akshare-meta">正在读取云端生成的数据。</p>
-    <div class="akshare-markets" id="akshare-markets"><p class="akshare-message">加载中…</p></div>
-  </section>
   <div class="brief-view-toggle" role="group" aria-label="Brief view"><button type="button" data-brief-view="ah" data-label-zh="A股/港股" data-label-en="A Shares / HK" aria-pressed="true">A股/港股</button><button type="button" data-brief-view="us" data-label-zh="美股" data-label-en="US Market" aria-pressed="false">美股</button></div>
   <section class="brief-grid">
     <article class="brief panel" id="a-h-brief"><div class="brief-header"><div class="brief-kicker">Asia Morning</div><div class="brief-time" id="ah-time"><!-- A_H_TIME_START -->
@@ -1121,13 +1097,6 @@ Updated: 2026-09-02 21:11 CST
   var usContent = document.getElementById('us-content');
   var ahTime = document.getElementById('ah-time');
   var usTime = document.getElementById('us-time');
-  var akshareTitle = document.getElementById('akshare-title');
-  var akshareKicker = document.getElementById('akshare-kicker');
-  var akshareStatus = document.getElementById('akshare-status');
-  var akshareMeta = document.getElementById('akshare-meta');
-  var akshareMarkets = document.getElementById('akshare-markets');
-  var akshareSnapshot = null;
-  var akshareFailed = false;
   var sectorPanel = document.querySelector('.us-sector-panel');
   var loaded = {AH:null,US:null};
   var loadedTimes = {AH:'',US:''};
@@ -1149,47 +1118,6 @@ Updated: 2026-09-02 21:11 CST
   function typeKey(type){return String(type || '').toUpperCase().replace('/','');}
   function hasType(record, type){return (record.types || []).some(function(item){return typeKey(item) === type;});}
   function esc(text){return String(text == null ? '' : text).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
-  function formatQuote(value){
-    var number = Number(value);
-    if(!Number.isFinite(number)){return '--';}
-    return new Intl.NumberFormat(currentLang === 'en' ? 'en-US' : 'zh-CN', {maximumFractionDigits:4}).format(number);
-  }
-  function formatSnapshotTime(value){
-    var date = new Date(value);
-    if(Number.isNaN(date.getTime())){return String(value || '');}
-    return new Intl.DateTimeFormat(currentLang === 'en' ? 'en-CA' : 'zh-CN', {
-      timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false
-    }).format(date) + ' CST';
-  }
-  function renderAkshare(){
-    var isEn = currentLang === 'en';
-    akshareKicker.textContent = 'Cloud snapshot';
-    akshareTitle.textContent = isEn ? 'Latest AKShare market snapshot' : 'AKShare 最新行情';
-    if(akshareFailed){
-      akshareStatus.textContent = isEn ? 'Unavailable' : '读取失败';
-      akshareStatus.className = 'akshare-status is-error';
-      akshareMeta.textContent = isEn ? 'The latest cloud snapshot could not be loaded.' : '暂时无法读取云端行情快照。';
-      akshareMarkets.innerHTML = '<p class="akshare-message">' + (isEn ? 'The archived brief below is still available.' : '下方历史简报仍可正常查看。') + '</p>';
-      return;
-    }
-    if(!akshareSnapshot){return;}
-    akshareStatus.textContent = akshareSnapshot.status === 'ok' ? (isEn ? 'Updated' : '已更新') : (isEn ? 'Partial' : '部分可用');
-    akshareStatus.className = 'akshare-status ' + (akshareSnapshot.status === 'ok' ? 'is-ok' : 'is-error');
-    akshareMeta.textContent = (isEn ? 'Fetched ' : '抓取于 ') + formatSnapshotTime(akshareSnapshot.fetchedAt) + ' · AKShare ' + (akshareSnapshot.akshareVersion || '');
-    akshareMarkets.innerHTML = ['A','HK'].map(function(key){
-      var market = (akshareSnapshot.markets || {})[key] || {};
-      var quotes = (market.sample || []).map(function(quote){
-        var change = Number(quote['涨跌幅']);
-        var changeText = Number.isFinite(change) ? (change > 0 ? '+' : '') + change.toFixed(2) + '%' : '--';
-        var changeClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'watch');
-        return '<div class="akshare-quote"><span class="akshare-quote-name" title="' + esc(quote['名称']) + '">' + esc(quote['名称']) + '<small>' + esc(quote['代码']) + '</small></span><span class="akshare-price">' + formatQuote(quote['最新价']) + '</span><span class="akshare-change ' + changeClass + '">' + changeText + '</span></div>';
-      }).join('');
-      var label = key === 'A' ? (isEn ? 'A-share indexes' : 'A 股指数') : (isEn ? 'Hong Kong indexes' : '港股指数');
-      var count = Number(market.rowCount) || 0;
-      var sourceText = (isEn ? count + ' rows · ' : count + ' 条 · ') + (market.source || '--');
-      return '<section class="akshare-market"><div class="akshare-market-head"><b>' + label + '</b><span>' + esc(sourceText) + '</span></div><div class="akshare-quotes">' + (quotes || '<p class="akshare-message">--</p>') + '</div></section>';
-    }).join('');
-  }
   function renderCalendar(records){
     var latest = records[0] || {date:new Date().toISOString().slice(0,10),types:[]};
     var parts = latest.date.split('-').map(Number);
@@ -1274,7 +1202,6 @@ Updated: 2026-09-02 21:11 CST
     if(currentRecords.length){renderCalendar(currentRecords);}
     if(loaded.AH){ahContent.innerHTML = isEn ? loadedEn.AH : loaded.AH;cleanNewsTitlePrefixes(ahContent);revealModules(ahContent);}
     if(loaded.US){usContent.innerHTML = isEn ? loadedEn.US : loaded.US;cleanNewsTitlePrefixes(usContent);revealModules(usContent);}
-    renderAkshare();
     Array.prototype.forEach.call(document.querySelectorAll('.lang-toggle button'), function(button){
       button.classList.toggle('active', button.getAttribute('data-lang') === currentLang);
       button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
@@ -1381,16 +1308,6 @@ Updated: 2026-09-02 21:11 CST
   applyColorMode();
   applyBriefView();
   applyLanguage();
-  fetch('./data/akshare-latest.json', {cache:'no-store'}).then(function(res){
-    if(!res.ok){throw new Error(String(res.status));}
-    return res.json();
-  }).then(function(snapshot){
-    akshareSnapshot = snapshot;
-    renderAkshare();
-  }).catch(function(){
-    akshareFailed = true;
-    renderAkshare();
-  });
   fetch('./history/manifest.json', {cache:'no-store'}).then(function(res){return res.json();}).then(function(manifest){
     var records = (manifest.records || []).slice().sort(function(a,b){return b.date.localeCompare(a.date);});
     currentRecords = records;
