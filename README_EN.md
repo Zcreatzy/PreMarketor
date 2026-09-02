@@ -154,6 +154,23 @@ Then open:
 - Homepage: `http://localhost:8000/`
 - Specific date: `http://localhost:8000/history/?date=YYYY-MM-DD`
 
+## AKShare Cloud Market Evidence
+
+The repository includes an AKShare-only A-share/Hong Kong data collector. It tries
+Eastmoney first and Sina as a fallback, then emits representative indexes, market
+breadth, median percentage change, and leading/lagging samples:
+
+```sh
+python3 -m pip install -r requirements.txt
+python3 scripts/fetch_akshare_snapshot.py
+```
+
+The command exits non-zero only when both index baselines cannot be obtained. A
+missing breadth source produces `status: "partial"` and `analysisReady: false`.
+The daily brief generator uses the JSON as evidence for risk appetite, sector
+rotation, and same-day price/volume validation. A pre-open result is explicitly a
+previous-session close baseline; it is not a standalone page panel or a live quote.
+
 ## Update and Publication Contract
 
 A complete daily publication keeps three targets synchronized:

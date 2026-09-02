@@ -154,18 +154,21 @@ python3 -m http.server 8000
 - 首页：`http://localhost:8000/`
 - 指定日期：`http://localhost:8000/history/?date=YYYY-MM-DD`
 
-## AKShare 云端连通测试
+## AKShare 云端行情证据
 
-仓库提供一个仅依赖 AKShare 的 A股/港股指数抓取入口。它会依次尝试 AKShare
-中的东方财富和新浪接口，并将小型连通性快照写入 `data/akshare-latest.json`：
+仓库提供一个仅依赖 AKShare 的 A股/港股行情抓取入口。它会依次尝试 AKShare
+中的东方财富和新浪接口，输出代表指数、市场涨跌家数、中位涨跌幅以及领涨/领跌
+样本，并将结果写入 `data/akshare-latest.json`：
 
 ```sh
 python3 -m pip install -r requirements.txt
 python3 scripts/fetch_akshare_snapshot.py
 ```
 
-命令只有在 A股与港股两组数据都成功返回时才以状态码 0 结束，适合在 Codex
-Cloud 中验证云端网络；生成的 JSON 作为静态文件可由 Vercel 直接发布。
+只有 A股或港股指数基线均不可用时命令才以非零状态退出；个股宽度不完整会将
+`status` 标记为 `partial`、`analysisReady` 标记为 `false`。每日简报生成器应把
+该 JSON 作为分析证据：盘前抓取会明确标记为上一交易时段收盘基线，用于校准
+风险偏好、板块轮动和当天量价验证条件，不作为独立页面模块，也不得冒充实时行情。
 
 ## 更新与发布契约
 
