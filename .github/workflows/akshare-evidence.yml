@@ -3,8 +3,11 @@ name: Refresh AKShare market evidence
 on:
   workflow_dispatch:
   schedule:
-    # 08:35 and 09:05 Asia/Shanghai, Monday-Friday.
+    # Primary windows: 08:35 and 09:05 Asia/Shanghai, Monday-Friday.
+    # Earlier backup windows absorb occasional GitHub scheduler delay.
+    - cron: "20 0 * * 1-5"
     - cron: "35 0 * * 1-5"
+    - cron: "55 0 * * 1-5"
     - cron: "5 1 * * 1-5"
 
 permissions:
