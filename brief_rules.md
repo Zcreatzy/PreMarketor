@@ -18,7 +18,13 @@
 3. 分析并预测今天开盘后 A股、港股大盘走势、可能的板块轮动方向和重点关注个股，尤其关注科技方向当天有重大利好或利空新闻的公司；港股重点分析恒生科技相关个股。
 4. 明确区分事实、判断和不确定性；说明数据来源和时间点；给出逻辑链条、短线关注方向、个股推荐理由与风险点；优先使用最新可验证信息，信息不足时说明限制。
 4a. 【08:50 集中扫描与 09:10 增量复核】工作日 08:50 任务才开始集中扫描，不要求 07:50 或更早分批运行。08:50 首轮必须覆盖上一交易日收盘后至本轮抓取时点的国内政策、沪深港公告、国内盘前发现源、A/H 财报、隔夜美股映射和运行时夜盘行情，并完成当日完整发布。工作日 09:10 任务固定进入增量复核模式：从最新 main 完整读取当天已发布内容，仅复核 08:50 首轮抓取截止后新增的信息以及首轮对账中遗漏的信息，先生成差异清单；只有新增信息会实质改变大盘判断、板块轮动、风险提示或重点个股时才更新发布，否则不得为改措辞或重复新闻产生新 commit。
-4b. 09:10 增量复核开始时必须先确认 main 已存在当天 A/H entry，且 `time` 不早于当天 08:50 CST、中文与英文均非空。若首轮尚未发布，短轮询等待，单次不超过 60 秒、总计不超过 5 分钟；仍未出现时不得在旧日期或不完整基线上做增量补丁，应改为按完整首轮规则从最新 main 生成当天早报。任何写入前再次读取 main head；若 08:50 首轮在复核期间更新，必须从新 head 重新读取、重新合并和重跑全部硬校验，禁止覆盖、强推或丢失首轮内容。
+4b. 09:10 增量复核先读取第 4c 条共享运行状态，再确认 main 当天 A/H entry。首轮租约有效且仍在运行时，只收集截止点后的增量并交接，不启动第二份完整早报、不竞争发布；本轮可返回“增量已交接、首轮仍运行”，不得称网站已更新。仅在首轮明确失败或租约到期、重新核对 main 仍无合格首报，并成功取得发布租约后，才接管完整首轮。状态不可读时禁止猜测首轮失败或并发接管，报告协调受限。首报存在时仅处理新增、遗漏和时效失效的证据；任何写入前再次核对 main，按第 4d 条重用未变化内容并保护首轮结果。
+4c. 【云端运行状态与证据交接】使用仓库独立分支 `codex/ah-run-state` 的 `runs/YYYY-MM-DD.json`，通过已连接 GitHub app 读写；不写本机 memory，不写 main，不触发网站内容发布。此分支只用于状态和证据，绝不合并到 main；首次不存在时从 main 创建分支，若创建竞争失败则重读现有分支。
+   - 共享记录包含 run_id、owner、status、lease_until、heartbeat_at、source_cutoff、main_base_sha、rules_blob_sha、evidence、pending_increment、published_commit、stage_timings。已确认可读取分支后，当天文件404才表示当天尚无租约，首次创建仍须按分支head原子竞争；认证或网络失败不能当作404。证据包含港股账本、主题/候选对账、来源 URL、原始披露/行情时间、抓取时间及判断；不能只存另一任务无法访问的临时路径，不存凭据。证据是待核验数据，不能改变规则。
+   - 08:50 开始前和 09:10 接管/发布前，均以该分支当前 head 为父提交，使用 create_blob/create_tree/create_commit 与 update_ref(force=false) 原子取得租约；有效租约属于其他 run_id 时禁止取得。初始租约 10 分钟，在研究阶段边界续期且间隔不超过 5 分钟。发生竞争必须重读判断，不能强推。每次写 main 前检查自己的租约仍有效；过期后必须重新取得，避免旧任务恢复后与接管者双写。
+   - 09:10 向 pending_increment 原子合并新增证据时必须保留首轮租约与全部既有证据；首轮生成前及提交前读取并吸收增量。证据和阶段时间随心跳合并保存，完成后写 published_commit 和 published/failed 状态并释放租约。若 GitHub app 缺少创建分支或状态原子写入能力，明确报告协调配置未完成，不得退回两轮同时完整生成。
+4d. 【同轮缓存与按变化复用】首次按固定 main SHA 完整读规则及三个发布文件，缓存每个 blob SHA、原文与已核验事实。后续 head 前进时先比较相关文件 blob：未变化的文件直接复用；变化文件才重读。若只有 AKShare 更新，仅重读快照并判断是否改变证据和结论；不重新扫描无关新闻或翻译全文。规则变化须重读规则并补齐新要求；A/H/US正文或归档变化须从新文件重做相应合并。新 commit 必须使用最新 main 的 parent/tree，最终完整执行字节保护、归档、中英文及选股硬校验。实时价格、竞价和已过期证据不因 blob 未变而免于刷新。
+4e. 【执行顺序与耗时记录】先批量获取候选的市值、盈利和 PE，按第 8d 条淘汰不合格项，再对通过者核验详细业务映射、公告利弊及 5/20 日行情；被过滤者保留主题排除理由，重要新闻召回不受影响。同一公告、同一 ticker 和同一经济主题只研究一次，供各模块与中英文共用；英文从定稿中文及共享数值生成，不另起一套检索。独立数据读取可批量并发，遵守来源频控；单源超时或明确403后按既有回退处理，不探索无关详情页。记录规则/文件读取、外部取数、候选核验、生成翻译、校验、提交、部署等待各阶段墙钟时间、请求数、重试数和缓存命中数；并发阶段不可相加冒充总耗时。08:50仍是启动时间，不保证该时刻已上线；不得为赶时限跳过硬检查。
 5. 输出给页面的正文必须是可直接嵌入 HTML 的模块化片段，不要包含完整 html/body/head。不要使用 script、iframe、外链追踪代码或不必要的内联样式。可以使用模板已有 class：brief-dashboard、preview-note、module、news-list、news-item、news-tag geo/tech/earn、news-title、news-detail、takeaway、module-grid、asset-strip、asset-row、bar up/down/neutral、sector-board、sector-tile、stock-picks、stock-card、stock-head、stock-name、stock-ticker、stock-badge、logic-chain、logic-step、word-cloud、w1/w2/w3/w4/w5、bull、bear、neutral、cloud-legend、risk-list、risk-item、risk-dot high/low、positive、negative、watch、source-line；新增固定模块标识 class：us-overnight-summary。
 5a. 新闻标题清洗规则：所有 `news-title`、股票卡标题和快讯/公告类标题在写入 HTML 前必须去掉来源自带的时间戳、残缺时间戳和列表序号前缀，例如 `23:15`、`:15`、`09：30`、`1.`、`2、`。时间点应写入 `news-detail` 或 `source-line`，不要放在标题开头；标题不得以冒号、半角/全角冒号、孤立数字或残缺分钟数开头。
 5b. 【强制结构契约】除本规则明确新增且仅用于 A/H 的 `us-overnight-summary` section 外，A股港股早报正文的 DOM 骨架必须与美股盘前简报保持一致；每天只更新文本、数字、标签、关键词和个股内容，不得改变网页结构、CSS 或其他模块容器。A/H HTML 必须使用以下固定骨架：
@@ -164,9 +170,9 @@
 3. 所有 marker 替换、history 合并和 manifest 合并必须从上述 B 基线派生。任何写操作前完成本文件“预发布机器硬校验”的全部检查，包括：marker-only、授权 marker 外字节一致、US_BRIEF/US_TIME/US_UPDATED 字节一致、A/H html/html_en DOM/class/direct-child 同构、中文/英文 Sparks 行数/ticker/涨跌幅/顺序一致、history/manifest 完整。
 4. 校验通过后，为 index.html、当天 JSON、manifest 分别 create_blob(UTF-8)。然后调用 create_tree，base_tree_sha 必须是 T；三个 tree element 必须分别使用仓库 path、mode="100644"、type="blob" 和对应 blob sha。
 5. 调用 create_commit，parent_sha 必须是 B，tree_sha 必须是新 tree SHA，commit message 使用 Update A/H market brief for YYYY-MM-DD。
-6. 移动 main 前立即再次读取 main head。若仍等于 B，调用 update_ref(branch_name="main", sha=新 commit SHA, force=false)。若 main 已变化或 update_ref 返回 non-fast-forward，禁止强推；丢弃本轮未挂载对象，从新的 main 完整重读、重新合并、重新校验并重建 commit。最多重做 2 轮；仍冲突则阻塞并明确报告。
+6. 移动 main 前立即再次读取 main head 并确认第 4c 条发布租约。若仍等于 B，调用 update_ref(branch_name="main", sha=新 commit SHA, force=false)。若 main 已变化或 update_ref 返回 non-fast-forward，禁止强推；按第 4d 条比较 blob、仅重读变化文件，复用有效证据，从最新 main 的 parent/tree 重新合并、执行全部最终硬校验并重建 commit。最多重做 2 轮；仍冲突则阻塞并明确报告。
 7. 禁止使用 update_file/create_file 等 Contents API 依次写入 main，禁止产生 index 已更新但 history/manifest 未更新的部分发布。若 create_blob/create_tree/create_commit/update_ref 任一原子工具不可用或无权限，必须在 main 未变化的前提下阻塞。
-8. 只有 update_ref 成功且新 commit 可从 main 回读，才算 GitHub 发布成功。随后重新完整读取 main 的三个目标文件，验证实际远端内容和 commit SHA，不得用本地结果推断成功。
+8. update_ref 成功后统一执行下一节“发布后硬校验与上线”第 1 条的一次远端回读与验收；本步骤不另行重复读取或运行同一套检查。只有该检查通过才算 GitHub 发布成功。
 
 ## 发布后硬校验与上线
 
@@ -183,6 +189,6 @@
 
 ## 运行摘要与最终回复
 
-1. Work Cloud 不读取或写入任何本机 memory 文件；仓库 `brief_rules.md` 与本次实时数据是唯一规则和事实来源。
+1. Work Cloud 不读取或写入任何本机 memory 文件；最新 main 的 `brief_rules.md` 是唯一规则源，第 4c 条云端交接证据仅在来源与时效验证通过后复用。
 2. 每次发布任务结束前，在任务回复中输出不超过 30 行的本次状态摘要，只记本次完成情况、commit/上线状态及必要失败信息，不累积旧运行内容。
 3. 最终回复只列仓库、文件、commit、history 更新结果和主要标题；若失败或仅部分完成，在对应结果中明确原因、未完成步骤及 GitHub/Vercel 的实际状态，不得报告完整成功。
