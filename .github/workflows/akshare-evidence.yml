@@ -3,8 +3,8 @@ name: Refresh AKShare market evidence
 on:
   workflow_dispatch:
   schedule:
-    # One daily baseline: 08:35 Asia/Shanghai, Monday-Friday.
-    - cron: "35 0 * * 1-5"
+    # One daily baseline: 08:20 Asia/Shanghai, Monday-Friday.
+    - cron: "20 0 * * 1-5"
 
 permissions:
   contents: write
